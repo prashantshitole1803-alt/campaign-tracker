@@ -44,50 +44,42 @@
 
 
 # backend/campaigns/views.py
-
-import requests
-from django.http import JsonResponse
+from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import viewsets
 from .models import Campaign
 from .serializers import CampaignSerializer
+from django.db.models import Count, Sum
+import requests
+from django.http import JsonResponse
 
-# ---------------------------
-# Campaign API ViewSet
-# ---------------------------
 class CampaignViewSet(viewsets.ModelViewSet):
     queryset = Campaign.objects.all()
     serializer_class = CampaignSerializer
 
-# ---------------------------
-# Dashboard stats endpoint
-# ---------------------------
 @api_view(['GET'])
 def dashboard_stats(request):
-    # Example stats, modify as per your project
-    total_campaigns = Campaign.objects.count()
-    active_campaigns = Campaign.objects.filter(status='active').count()
-    data = {
-        "total_campaigns": total_campaigns,
-        "active_campaigns": active_campaigns,
-    }
-    return Response(data)
+    return Response({
+        "status_counts": Campaign.objects.values('status').annotate(count=Count('id')),
+        "platform_budget": Campaign.objects.values('platform').annotate(total=Sum('budget')),
+        "total_campaigns": Campaign.objects.count(),
+        "total_budget": Campaign.objects.aggregate(Sum('budget'))['budget__sum'] or 0
+    })
 
-# ---------------------------
-# Marketing quote endpoint
-# ---------------------------
 @api_view(['GET'])
 def marketing_quote(request):
     try:
-        response = requests.get("https://api.quotable.io/random", verify=True)
-        response.raise_for_status()
-        data = response.json()
+        # Temporarily handle SSL errors
+        res = requests.get("https://api.quotable.io/random", verify=True)  # change to False if SSL fails
+        res.raise_for_status()
+        data = res.json()
     except requests.exceptions.SSLError:
         data = {"content": "Keep pushing forward!", "author": "Server fallback"}
     except requests.exceptions.RequestException:
         data = {"content": "Stay motivated every day!", "author": "Server fallback"}
     return JsonResponse(data)
+
 
 # def marketing_quote(request):
 #     try:
