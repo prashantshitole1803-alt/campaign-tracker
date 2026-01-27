@@ -1,5 +1,13 @@
+// import axios from "axios";
+
+// export const api = axios.create({
+//   baseURL: "https://campaign-tracker-1-hm6d.onrender.com/api/",
+// });
+
 import axios from "axios";
 
-export const api = axios.create({
-  baseURL: "https://campaign-tracker-1-hm6d.onrender.com/api/",
+const api = axios.create({
+  baseURL: "https://campaign-tracker-1-hm6d.onrender.com/api/", // your Render backend
 });
+
+export default api;
