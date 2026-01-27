@@ -38,95 +38,81 @@
 //     </div>
 //   );
 // }
+
+
+
 import { useEffect, useState } from "react";
-import api from "./api"; // Make sure api.js has your deployed backend URL
+import api from "./api";
 
 export default function Campaigns() {
   const [campaigns, setCampaigns] = useState([]);
-  const [form, setForm] = useState({ name: "" });
-  const [loading, setLoading] = useState(true); // Show loading while fetching
-  const [error, setError] = useState(null);     // Show errors if API fails
+  const [name, setName] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // Load campaigns from backend
-  const load = async () => {
+  const loadCampaigns = async () => {
     try {
       setLoading(true);
-      setError(null);
-      const res = await api.get("campaigns/"); // Uses /api/campaigns/
+      const res = await api.get("campaigns/");
       setCampaigns(res.data);
+      setError("");
     } catch (err) {
-      console.error("Failed to load campaigns:", err);
-      setError("Failed to load campaigns from backend.");
-      setCampaigns([]); // fallback to empty list
+      console.error(err);
+      setError("Unable to load campaigns");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    load();
+    loadCampaigns();
   }, []);
 
-  // Create new campaign
-  const create = async () => {
-    if (!form.name.trim()) return alert("Name is required");
+  const createCampaign = async () => {
+    if (!name.trim()) return;
+
     try {
-      await api.post("campaigns/", form);
-      setForm({ name: "" });
-      load();
+      await api.post("campaigns/", { name });
+      setName("");
+      loadCampaigns();
     } catch (err) {
-      console.error("Failed to create campaign:", err);
-      alert("Failed to create campaign. Check backend or network.");
+      console.error(err);
+      alert("Failed to create campaign");
     }
   };
 
-  // Delete campaign
-  const remove = async (id) => {
+  const deleteCampaign = async (id) => {
     try {
       await api.delete(`campaigns/${id}/`);
-      load();
+      loadCampaigns();
     } catch (err) {
-      console.error("Failed to delete campaign:", err);
-      alert("Failed to delete campaign. Check backend or network.");
+      console.error(err);
+      alert("Failed to delete campaign");
     }
   };
 
   return (
-    <div style={{ padding: "1rem" }}>
+    <div style={{ padding: 20 }}>
       <h2>Campaigns</h2>
 
-      {/* Error message */}
       {error && <p style={{ color: "red" }}>{error}</p>}
 
-      {/* New campaign input */}
-      <div style={{ marginBottom: "1rem" }}>
-        <input
-          type="text"
-          placeholder="Campaign Name"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-        />
-        <button onClick={create} style={{ marginLeft: "0.5rem" }}>
-          Create
-        </button>
-      </div>
+      <input
+        placeholder="Campaign name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      <button onClick={createCampaign}>Create</button>
 
-      {/* Loading or campaigns list */}
       {loading ? (
-        <p>Loading campaigns...</p>
-      ) : campaigns.length === 0 ? (
-        <p>No campaigns found.</p>
+        <p>Loading...</p>
       ) : (
-        <ul>
-          {campaigns.map((c) => (
-            <li key={c.id} style={{ marginBottom: "0.5rem" }}>
-              {c.name}{" "}
-              <button onClick={() => remove(c.id)} style={{ marginLeft: "0.5rem" }}>
-                Delete
-              </button>
-            </li>
-          ))}
-        </ul>
+        campaigns.map((c) => (
+          <div key={c.id}>
+            {c.name}
+            <button onClick={() => deleteCampaign(c.id)}>Delete</button>
+          </div>
+        ))
       )}
     </div>
   );
