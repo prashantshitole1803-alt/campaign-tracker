@@ -27,3 +27,17 @@ def dashboard_stats(request):
 def marketing_quote(request):
     res = requests.get("https://api.quotable.io/random")
     return Response(res.json())
+
+def marketing_quote(request):
+    try:
+        # Temporarily disable SSL verification if needed
+        response = requests.get("https://api.quotable.io/random", verify=True)  # or False
+        response.raise_for_status()
+        data = response.json()
+    except requests.exceptions.SSLError:
+        # SSL failed → return a fallback quote
+        data = {"content": "Keep pushing forward!", "author": "Server fallback"}
+    except requests.exceptions.RequestException:
+        # Network error fallback
+        data = {"content": "Stay motivated every day!", "author": "Server fallback"}
+    return JsonResponse(data)
