@@ -80,18 +80,29 @@ def dashboard_stats(request):
 @api_view(['GET'])
 def marketing_quote(request):
     try:
-        # Try to fetch from external API
-        response = requests.get(
-            "https://api.quotable.io/random", 
-            timeout=5,      # add timeout for safety
-            verify=True     # set to False if SSL issues persist
-        )
+        response = requests.get("https://api.quotable.io/random", verify=True)
         response.raise_for_status()
         data = response.json()
     except requests.exceptions.SSLError:
-        # SSL failed → return a fallback quote
         data = {"content": "Keep pushing forward!", "author": "Server fallback"}
     except requests.exceptions.RequestException:
-        # Any network error fallback
         data = {"content": "Stay motivated every day!", "author": "Server fallback"}
     return JsonResponse(data)
+
+# def marketing_quote(request):
+#     try:
+#         # Try to fetch from external API
+#         response = requests.get(
+#             "https://api.quotable.io/random", 
+#             timeout=5,      # add timeout for safety
+#             verify=True     # set to False if SSL issues persist
+#         )
+#         response.raise_for_status()
+#         data = response.json()
+#     except requests.exceptions.SSLError:
+#         # SSL failed → return a fallback quote
+#         data = {"content": "Keep pushing forward!", "author": "Server fallback"}
+#     except requests.exceptions.RequestException:
+#         # Any network error fallback
+#         data = {"content": "Stay motivated every day!", "author": "Server fallback"}
+#     return JsonResponse(data)

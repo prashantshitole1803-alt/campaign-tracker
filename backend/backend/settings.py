@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'corsheaders',
+    #'corsheaders',
     'rest_framework',
     'campaigns',
 ]
@@ -72,6 +72,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
+# Allow your frontend domain
+CORS_ALLOWED_ORIGINS = [
+    "https://campaign-tracker.vercel.app"
+]
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
