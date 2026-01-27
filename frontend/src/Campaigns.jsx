@@ -44,28 +44,26 @@ import api from "./api";
 
 export default function Campaigns() {
   const [campaigns, setCampaigns] = useState([]);
-  const [form, setForm] = useState({ name: "", status: "", platform: "", budget: 0 });
+  const [form, setForm] = useState({});
 
   const load = async () => {
     try {
       const res = await api.get("campaigns/");
       setCampaigns(res.data);
     } catch (err) {
-      console.error("Error loading campaigns:", err);
+      console.error("Failed to load campaigns:", err);
     }
   };
 
-  useEffect(() => {
-    load();
-  }, []);
+  useEffect(() => { load(); }, []);
 
   const create = async () => {
     try {
       await api.post("campaigns/", form);
-      setForm({ name: "", status: "", platform: "", budget: 0 });
+      setForm({});
       load();
     } catch (err) {
-      console.error("Error creating campaign:", err);
+      console.error("Failed to create campaign:", err);
     }
   };
 
@@ -74,7 +72,7 @@ export default function Campaigns() {
       await api.delete(`campaigns/${id}/`);
       load();
     } catch (err) {
-      console.error("Error deleting campaign:", err);
+      console.error("Failed to delete campaign:", err);
     }
   };
 
@@ -83,30 +81,14 @@ export default function Campaigns() {
       <h2>Campaigns</h2>
       <input
         placeholder="Name"
-        value={form.name}
+        value={form.name || ""}
         onChange={(e) => setForm({ ...form, name: e.target.value })}
-      />
-      <input
-        placeholder="Status"
-        value={form.status}
-        onChange={(e) => setForm({ ...form, status: e.target.value })}
-      />
-      <input
-        placeholder="Platform"
-        value={form.platform}
-        onChange={(e) => setForm({ ...form, platform: e.target.value })}
-      />
-      <input
-        placeholder="Budget"
-        type="number"
-        value={form.budget}
-        onChange={(e) => setForm({ ...form, budget: Number(e.target.value) })}
       />
       <button onClick={create}>Create</button>
 
       {campaigns.map((c) => (
         <div key={c.id}>
-          <strong>{c.name}</strong> - {c.status} ({c.platform}) - ${c.budget}
+          {c.name}
           <button onClick={() => remove(c.id)}>Delete</button>
         </div>
       ))}
