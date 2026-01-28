@@ -40,54 +40,52 @@
 // }
 
 
-
 import { useEffect, useState } from "react";
 import api from "./api";
 
 export default function Campaigns() {
   const [campaigns, setCampaigns] = useState([]);
-  const [name, setName] = useState("");
+  const [form, setForm] = useState({ name: "" });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const loadCampaigns = async () => {
+  const load = async () => {
     try {
+      setError("");
       setLoading(true);
       const res = await api.get("campaigns/");
       setCampaigns(res.data);
-      setError("");
     } catch (err) {
       console.error(err);
-      setError("Unable to load campaigns");
+      setError("Backend is waking up… please wait 30 seconds and refresh.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadCampaigns();
+    load();
   }, []);
 
-  const createCampaign = async () => {
-    if (!name.trim()) return;
-
+  const create = async () => {
+    if (!form.name.trim()) return alert("Campaign name required");
     try {
-      await api.post("campaigns/", { name });
-      setName("");
-      loadCampaigns();
+      await api.post("campaigns/", form);
+      setForm({ name: "" });
+      load();
     } catch (err) {
       console.error(err);
-      alert("Failed to create campaign");
+      alert("Backend waking up. Try again in 20–30 seconds.");
     }
   };
 
-  const deleteCampaign = async (id) => {
+  const remove = async (id) => {
     try {
       await api.delete(`campaigns/${id}/`);
-      loadCampaigns();
+      load();
     } catch (err) {
       console.error(err);
-      alert("Failed to delete campaign");
+      alert("Delete failed. Backend may be asleep.");
     }
   };
 
@@ -95,25 +93,24 @@ export default function Campaigns() {
     <div style={{ padding: 20 }}>
       <h2>Campaigns</h2>
 
+      {loading && <p>Loading… (first load may take 30s)</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       <input
         placeholder="Campaign name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
+        value={form.name}
+        onChange={(e) => setForm({ name: e.target.value })}
       />
-      <button onClick={createCampaign}>Create</button>
+      <button onClick={create}>Create</button>
 
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        campaigns.map((c) => (
-          <div key={c.id}>
-            {c.name}
-            <button onClick={() => deleteCampaign(c.id)}>Delete</button>
-          </div>
-        ))
-      )}
+      <hr />
+
+      {campaigns.map((c) => (
+        <div key={c.id}>
+          {c.name}
+          <button onClick={() => remove(c.id)}>Delete</button>
+        </div>
+      ))}
     </div>
   );
 }
