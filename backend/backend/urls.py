@@ -14,10 +14,29 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
+
+# from django.contrib import admin
+# from django.urls import path , include
+
+# urlpatterns = [
+#     path('admin/', admin.site.urls),
+#     path('api/', include('campaigns.urls')),  # campaigns URLs included under /api/
+# ]
+
 from django.contrib import admin
-from django.urls import path , include
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from campaigns.views import CampaignViewSet, dashboard_stats, marketing_quote
+
+router = DefaultRouter()
+router.register(r"campaigns", CampaignViewSet, basename="campaign")
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/', include('campaigns.urls')),  # campaigns URLs included under /api/
+    path("admin/", admin.site.urls),
+
+    # API
+    path("api/", include(router.urls)),
+    path("api/dashboard/", dashboard_stats),
+    path("api/quote/", marketing_quote),
 ]
