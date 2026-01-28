@@ -47,17 +47,27 @@ export default function Campaigns() {
   const [campaigns, setCampaigns] = useState([]);
   const [form, setForm] = useState({ name: "" });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(null);
 
+  // Load campaigns (safe for Render cold start)
   const load = async () => {
     try {
-      setError("");
       setLoading(true);
-      const res = await api.get("campaigns/");
+      setError(null);
+
+      const res = await api.get("campaigns/", {
+        timeout: 60000, // allow backend cold start
+      });
+
       setCampaigns(res.data);
     } catch (err) {
       console.error(err);
-      setError("Backend is waking up… please wait 30 seconds and refresh.");
+
+      if (!err.response) {
+        setError("Backend is starting… please wait 30 seconds and refresh.");
+      } else {
+        setError("Failed to load campaigns.");
+      }
     } finally {
       setLoading(false);
     }
@@ -67,50 +77,84 @@ export default function Campaigns() {
     load();
   }, []);
 
+  // Create campaign (non-blocking UI)
   const create = async () => {
-    if (!form.name.trim()) return alert("Campaign name required");
+    if (!form.name.trim()) return;
+
     try {
-      await api.post("campaigns/", form);
+      setError(null);
+
+      await api.post("campaigns/", form, {
+        timeout: 60000,
+      });
+
       setForm({ name: "" });
       load();
     } catch (err) {
       console.error(err);
-      alert("Backend waking up. Try again in 20–30 seconds.");
+      setError("Backend waking up. Try again in 30 seconds.");
     }
   };
 
+  // Delete campaign
   const remove = async (id) => {
     try {
-      await api.delete(`campaigns/${id}/`);
+      setError(null);
+
+      await api.delete(`campaigns/${id}/`, {
+        timeout: 60000,
+      });
+
       load();
     } catch (err) {
       console.error(err);
-      alert("Delete failed. Backend may be asleep.");
+      setError("Failed to delete campaign.");
     }
   };
 
   return (
-    <div style={{ padding: 20 }}>
+    <div style={{ padding: "20px" }}>
       <h2>Campaigns</h2>
 
-      {loading && <p>Loading… (first load may take 30s)</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {/* Status message */}
+      {error && (
+        <p style={{ color: "orange", marginBottom: "10px" }}>
+          {error}
+        </p>
+      )}
 
-      <input
-        placeholder="Campaign name"
-        value={form.name}
-        onChange={(e) => setForm({ name: e.target.value })}
-      />
-      <button onClick={create}>Create</button>
+      {/* Create form */}
+      <div style={{ marginBottom: "15px" }}>
+        <input
+          placeholder="Campaign name"
+          value={form.name}
+          onChange={(e) =>
+            setForm({ ...form, name: e.target.value })
+          }
+        />
+        <button onClick={create} style={{ marginLeft: "10px" }}>
+          Create
+        </button>
+      </div>
 
-      <hr />
-
-      {campaigns.map((c) => (
-        <div key={c.id}>
-          {c.name}
-          <button onClick={() => remove(c.id)}>Delete</button>
-        </div>
-      ))}
+      {/* Campaign list */}
+      {loading ? (
+        <p>Loading campaigns…</p>
+      ) : campaigns.length === 0 ? (
+        <p>No campaigns yet.</p>
+      ) : (
+        campaigns.map((c) => (
+          <div key={c.id} style={{ marginBottom: "8px" }}>
+            {c.name}
+            <button
+              onClick={() => remove(c.id)}
+              style={{ marginLeft: "10px" }}
+            >
+              Delete
+            </button>
+          </div>
+        ))
+      )}
     </div>
   );
 }
